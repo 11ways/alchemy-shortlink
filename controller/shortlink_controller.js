@@ -17,7 +17,7 @@ const Shortlink = Function.inherits('Alchemy.Controller', function Shortlink(con
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.1.1
  *
  * @param    {Conduit}   conduit
  */
@@ -53,11 +53,11 @@ Shortlink.setAction(async function create(conduit) {
 		});
 	}
 
-	conduit.end({
-		data : {
-			url : document.short_url,
-		}
-	});
+	let response = {
+		shorturl : document.short_url,
+	};
+
+	conduit.end(response);
 });
 
 /**
@@ -75,6 +75,31 @@ Shortlink.setAction(async function redirect(conduit, short_code) {
 	let shortlink = this.getModel('Shortlink');
 
 	let document = await shortlink.findByShortcode(short_code);
+
+	if (!document || !document.long_url) {
+		return conduit.notFound();
+	}
+
+	document.registerHit(conduit);
+
+	return conduit.redirect(document.long_url);
+});
+
+/**
+ * Catchall
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.1.1
+ * @version  0.1.1
+ *
+ * @param    {Conduit}   conduit
+ * @param    {String}    path
+ */
+Shortlink.setAction(async function catchAll(conduit, path) {
+
+	let shortlink = this.getModel('Shortlink');
+
+	let document = await shortlink.findByShortcode(path);
 
 	if (!document || !document.long_url) {
 		return conduit.notFound();

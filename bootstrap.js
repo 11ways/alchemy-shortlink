@@ -15,3 +15,9 @@ Router.add({
 	methods    : 'get',
 	paths      : '/{short_code}'
 });
+
+Router.add({
+	name       : 'Shortlink#catchAll',
+	methods    : 'get',
+	paths      : /\/(.*)/,
+});

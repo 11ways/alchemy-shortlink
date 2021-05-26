@@ -45,6 +45,40 @@ Shortlink.constitute(function addFields() {
 });
 
 /**
+ * Configure the default chimera fieldsets
+ *
+ * @author   Jelle De Loecker <jelle@elevenways.be>
+ * @since    0.1.0
+ * @version  0.1.0
+ */
+Shortlink.constitute(function chimeraConfig() {
+
+	var list,
+	    edit;
+
+	if (!this.chimera) {
+		return;
+	}
+
+	// Get the list group
+	list = this.chimera.getActionFields('list');
+
+	list.addField('long_url');
+	list.addField('short_code');
+	list.addField('user_id');
+	list.addField('ip');
+
+	// Get the edit group
+	edit = this.chimera.getActionFields('edit');
+
+	edit.addField('long_url');
+	edit.addField('short_url');
+	edit.addField('short_code');
+	edit.addField('user_id');
+	edit.addField('ip');
+});
+
+/**
  * Set codes before saving
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
@@ -78,6 +112,7 @@ Shortlink.setMethod(function beforeSave(document, options, next) {
 Shortlink.setMethod(function getNanoidGenerator() {
 
 	if (!generator) {
+		// This is enough for 113 million shortcodes
 		generator = Crypto.createNanoidGenerator('acdefhjkmnprtwxyz34679', 6);
 	}
 
