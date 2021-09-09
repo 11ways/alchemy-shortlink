@@ -143,7 +143,7 @@ Shortlink.setMethod(function generateNanoid(size) {
  */
 Shortlink.setMethod(async function findByShortcode(short_code) {
 
-	if (!short_code) {
+	if (short_code == null) {
 		throw new Error('Failed to look for a shortlink document, no shortcode was given');
 	}
 
