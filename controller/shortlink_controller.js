@@ -8,9 +8,7 @@
  * @since         0.1.0
  * @version       0.1.0
  */
-const Shortlink = Function.inherits('Alchemy.Controller', function Shortlink(conduit, options) {
-	Shortlink.super.call(this, conduit, options);
-});
+const Shortlink = Function.inherits('Alchemy.Controller', 'Shortlink');
 
 /**
  * Create a new shortlink
@@ -65,7 +63,7 @@ Shortlink.setAction(async function create(conduit) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.2.0
  *
  * @param    {Conduit}   conduit
  * @param    {String}    short_code
@@ -76,13 +74,7 @@ Shortlink.setAction(async function redirect(conduit, short_code) {
 
 	let document = await shortlink.findByShortcode(short_code);
 
-	if (!document || !document.long_url) {
-		return conduit.notFound();
-	}
-
-	document.registerHit(conduit);
-
-	return conduit.redirect(document.long_url);
+	this.handleShortlink(conduit, document);
 });
 
 /**
@@ -90,7 +82,7 @@ Shortlink.setAction(async function redirect(conduit, short_code) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.1
- * @version  0.1.1
+ * @version  0.2.0
  *
  * @param    {Conduit}   conduit
  * @param    {String}    path
@@ -101,11 +93,36 @@ Shortlink.setAction(async function catchAll(conduit, path) {
 
 	let document = await shortlink.findByShortcode(path);
 
-	if (!document || !document.long_url) {
+	this.handleShortlink(conduit, document);
+});
+
+/**
+ * Handle the found document
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @param    {Conduit}   conduit
+ * @param    {Shortlink} shortlink
+ */
+Shortlink.setMethod(async function handleShortlink(conduit, shortlink) {
+
+	let long_url = shortlink?.long_url;
+
+	if (!long_url) {
 		return conduit.notFound();
 	}
 
-	document.registerHit(conduit);
+	let view_type = conduit.param('view_type');
 
-	return conduit.redirect(document.long_url);
+	if (view_type == 'qr') {
+		this.set('qr', alchemy.plugins.shortlink?.qr);
+		this.set('shortlink', shortlink);
+		return this.render('shortlink/qr');
+	}
+
+	shortlink.registerHit(conduit);
+
+	return conduit.redirect(long_url);
 });
