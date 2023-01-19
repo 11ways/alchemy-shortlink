@@ -38,6 +38,11 @@ let options = {
 // Inject the user-overridden options
 alchemy.plugins.shortlink = Object.merge(options, config);
 
+Router.serveDependencyFile('qr-code-styling', {
+	file  : 'lib/qr-code-styling.js',
+	alias : '/scripts/qr-code-styling.js',
+});
+
 Router.add({
 	name       : 'Shortlink#create',
 	methods    : 'post',
