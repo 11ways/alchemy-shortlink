@@ -2,21 +2,21 @@
 	"name"            : "alchemy-shortlink",
 	"description"     : "A shortlink plugin for AlchemyMVC projects",
 	"author"          : "Jelle De Loecker <jelle@elevenways.be>",
-	"version"         : "0.1.1-alpha",
+	"version"         : "0.1.1",
 	"repository"      : "11ways/alchemy-shortlink",
 	"license"         : "MIT",
 	"keywords"        : ["skeleton", "boilerplate", "alchemymvc"],
 	"contributors"    : [],
 	"dependencies"    : {},
 	"devDependencies" : {
-		"alchemymvc" : "~1.1.2",
+		"alchemymvc" : ">=1.1.2",
 		"codecov"    : "~3.7.2",
 		"mocha"      : "~8.0.1",
 		"mongo-unit" : "~2.0.1",
 		"nyc"        : "^15.1.0"
 	},
 	"peerDependencies": {
-		"alchemymvc" : "~1.1.2"
+		"alchemymvc" : ">=1.1.2"
 	},
 	"scripts": {
 		"test"            : "node_modules/.bin/mocha --exit --reporter spec --bail --timeout 5000 --file test/00-init.js",
@@ -26,6 +26,5 @@
 	},
 	"engines": {
 		"node": ">=10.21.0"
-	},
-	"private": true
+	}
 }

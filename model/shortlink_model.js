@@ -18,7 +18,7 @@ const Shortlink = Function.inherits('Alchemy.Model', function Shortlink(options)
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.1.1
  */
 Shortlink.constitute(function addFields() {
 
@@ -29,16 +29,26 @@ Shortlink.constitute(function addFields() {
 	this.addField('short_code_hash', 'Number');
 
 	// The long url
-	this.addField('long_url', 'String');
-
-	// The short url
-	this.addField('short_url', 'String', {unique: true});
+	this.addField('long_url', 'String', {
+		description : 'The URL to point to'
+	});
 
 	// The generated id part of the url
-	this.addField('short_code', 'String', {unique: true});
+	this.addField('short_code', 'String', {
+		description : 'The shortcode used in the short url (unique). Can also contain slashes.',
+		unique: true
+	});
+
+	// The short url
+	this.addField('short_url', 'String', {
+		description : 'The full short URL (unique)',
+		unique: true
+	});
 
 	// The user this belongs to (if any)
-	this.belongsTo('User');
+	this.belongsTo('User', {
+		description : 'The user that made this shortlink',
+	});
 
 	// The IP address that created this
 	this.addField('ip', 'String');
@@ -49,7 +59,7 @@ Shortlink.constitute(function addFields() {
  *
  * @author   Jelle De Loecker <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.1.1
  */
 Shortlink.constitute(function chimeraConfig() {
 
@@ -63,17 +73,17 @@ Shortlink.constitute(function chimeraConfig() {
 	// Get the list group
 	list = this.chimera.getActionFields('list');
 
-	list.addField('long_url');
+	list.addField('created');
 	list.addField('short_code');
-	list.addField('user_id');
-	list.addField('ip');
+	list.addField('long_url');
+	list.addField('User.username');
 
 	// Get the edit group
 	edit = this.chimera.getActionFields('edit');
 
 	edit.addField('long_url');
-	edit.addField('short_url');
 	edit.addField('short_code');
+	edit.addField('short_url');
 	edit.addField('user_id');
 	edit.addField('ip');
 });
