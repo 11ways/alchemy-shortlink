@@ -1,0 +1,45 @@
+<al-form model="Shortlink">
+	<al-field
+		field-name="long_url"
+		placeholder="https://www.some-long-url.com"
+	>
+		<span slot="field-title">
+			The long url you want to serve
+		</span>
+		<span slot="field-description"></span>
+	</al-field>
+
+	<al-field
+		field-name="file"
+	>
+		<span slot="field-title">
+			Or upload a file you want to link to
+		</span>
+		<span slot="field-description"></span>
+	</al-field>
+
+	<al-field
+		field-name="short_code"
+		placeholder="your/custom/shortcode"
+	>
+		<span slot="field-title">
+			Customize your link
+		</span>
+		<span slot="field-description"></span>
+	</al-field>
+
+	<al-button class="button" behaviour="submit">
+		<al-state state-name="default">
+			{%t "submit" %}
+		</al-state>
+		<al-state state-name="error">
+			{%t "error" %}
+		</al-state>
+		<al-state state-name="done">
+			{%t "done" %}
+		</al-state>
+		<al-state state-name="busy">
+			{%t "busy" %}
+		</al-state>
+	</al-button>
+</al-form>

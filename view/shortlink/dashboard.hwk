@@ -1,0 +1,7 @@
+{% extend expose('alchemy_layout').root.view %}
+
+{% block expose('alchemy_layout').root.block %}
+
+<al-link-creator></al-link-creator>
+
+{% /block %}

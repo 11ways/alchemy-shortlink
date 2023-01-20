@@ -108,9 +108,14 @@ Shortlink.setAction(async function catchAll(conduit, path) {
  */
 Shortlink.setMethod(async function handleShortlink(conduit, shortlink) {
 
-	let long_url = shortlink?.long_url;
+	if (!shortlink) {
+		return conduit.notFound();
+	}
 
-	if (!long_url) {
+	let long_url = shortlink.long_url,
+	    file_id = shortlink.file;
+
+	if (!long_url && !file_id) {
 		return conduit.notFound();
 	}
 
@@ -124,5 +129,81 @@ Shortlink.setMethod(async function handleShortlink(conduit, shortlink) {
 
 	shortlink.registerHit(conduit);
 
+	if (file_id) {
+		const MediaFile = this.getModel('MediaFile');
+		let file = await MediaFile.findByPk(file_id);
+
+		let serve_options = {
+			disposition : 'inline',
+			filename    : file.filename,
+		};
+
+		return conduit.serveFile(file.path, serve_options);
+	}
+
 	return conduit.redirect(long_url);
+});
+
+/**
+ * Show the dashboard
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @param    {Conduit}   conduit
+ */
+Shortlink.setAction(async function dashboard(conduit) {
+
+	if (conduit.method == 'post') {
+		let data = conduit.body?.Shortlink;
+
+		if (!data || Object.isEmpty(data)) {
+			return conduit.error(new Error('No valid shortlink data was given'));
+		}
+
+		return this.createShortlink(conduit, data);
+	}
+
+	this.render('shortlink/dashboard');
+});
+
+/**
+ * View the details of a shortlink
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @param    {Conduit}   conduit
+ * @param    {Shortlink} shortlink
+ */
+Shortlink.setAction(async function view(conduit, shortlink) {
+
+	if (shortlink.file) {
+		const file = await this.getModel('MediaFile').findByPk(shortlink.file);
+		this.set('shortlink_file', file);
+	}
+
+	this.set('qr', alchemy.plugins.shortlink?.qr);
+	this.set('shortlink', shortlink);
+	this.render('shortlink/view');
+});
+
+/**
+ * Create a new link
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @param    {Conduit}   conduit
+ */
+Shortlink.setMethod(async function createShortlink(conduit, body) {
+
+	const Shortlink = this.getModel('Shortlink');
+
+	let record = await Shortlink.createShortUrl(body);
+
+	conduit.redirect(alchemy.routeUrl('Shortlink#view', {shortlink: record._id}));	
 });

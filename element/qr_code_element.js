@@ -84,7 +84,6 @@ QrCode.setMethod(async function introduced() {
 	const qrCode = new QRCodeStyling({
 		width: 1500,
 		height: 1500,
-		//type: "svg",
 		data: this.qr_content,
 		image: this.qr_logo,
 		qrOptions : {
@@ -103,11 +102,5 @@ QrCode.setMethod(async function introduced() {
 		}
 	});
 
-	//let canvas = document.createElement('canvas');
-	//this.append(canvas);
-
 	qrCode.append(this);
-	
-	
-	//qrCode.download({ name: "qr", extension: "svg" });
 });

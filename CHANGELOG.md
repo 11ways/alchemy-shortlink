@@ -1,6 +1,8 @@
 ## 0.2.0 (WIP)
 
 * Add QR-code view of shortlinks
+* Add a link creator page & a view page
+* Also host files
 
 ## 0.1.1 (2023-01-19)
 

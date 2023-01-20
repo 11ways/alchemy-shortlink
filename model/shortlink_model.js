@@ -9,16 +9,14 @@ let generator;
  * @since    0.1.0
  * @version  0.1.0
  */
-const Shortlink = Function.inherits('Alchemy.Model', function Shortlink(options) {
-	Shortlink.super.call(this, options);
-});
+const Shortlink = Function.inherits('Alchemy.Model', 'Shortlink');
 
 /**
  * Constitute the class wide schema
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.1
+ * @version  0.2.0
  */
 Shortlink.constitute(function addFields() {
 
@@ -30,7 +28,12 @@ Shortlink.constitute(function addFields() {
 
 	// The long url
 	this.addField('long_url', 'String', {
-		description : 'The URL to point to'
+		description : 'The URL to point to',
+	});
+
+	// The optional file to link to
+	this.addField('file', 'File', {
+		description : 'The optional file to link to instead',
 	});
 
 	// The generated id part of the url
@@ -59,7 +62,7 @@ Shortlink.constitute(function addFields() {
  *
  * @author   Jelle De Loecker <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.1
+ * @version  0.2.0
  */
 Shortlink.constitute(function chimeraConfig() {
 
@@ -76,6 +79,7 @@ Shortlink.constitute(function chimeraConfig() {
 	list.addField('created');
 	list.addField('short_code');
 	list.addField('long_url');
+	list.addField('file');
 	list.addField('User.username');
 
 	// Get the edit group
@@ -84,6 +88,7 @@ Shortlink.constitute(function chimeraConfig() {
 	edit.addField('long_url');
 	edit.addField('short_code');
 	edit.addField('short_url');
+	edit.addField('file');
 	edit.addField('user_id');
 	edit.addField('ip');
 });
@@ -170,7 +175,7 @@ Shortlink.setMethod(async function findByShortcode(short_code) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.2.0
  *
  * @param    {Object}   options
  *
@@ -179,19 +184,44 @@ Shortlink.setMethod(async function findByShortcode(short_code) {
 Shortlink.setMethod(async function createShortUrl(options) {
 
 	let long_url = options.long_url,
-	    short_code = options.short_code;
+	    short_code = options.short_code,
+	    file = options.file;
+	
+	if (file && long_url) {
+		throw new Error('Unable to create a short url: upload a file or give a long url, both are not allowed');
+	}
 
-	if (!long_url) {
+	if (!long_url && !file) {
 		throw new Error('Unable to create a short url without a long url');
 	}
 
-	if (!RURL.isUrl(long_url)) {
+	if (!file && !RURL.isUrl(long_url)) {
 		throw new Error('The given long url does not seem to be valid');
 	}
 
 	// If a short_code is given, make sure it doesn't already exist
 	if (short_code) {
-		short_code = short_code.toLowerCase();
+		short_code = short_code.toLowerCase().trim().replace(/\/+/, '/');
+
+		let index = short_code.indexOf('?');
+
+		if (index > -1) {
+			short_code = short_code.slice(0, index);
+		}
+
+		index = short_code.indexOf('#');
+
+		if (index > -1) {
+			short_code = short_code.slice(0, index);
+		}
+
+		while (short_code[0] == '/') {
+			short_code = short_code.slice(1).trim();
+		}
+
+		if (short_code[short_code.length - 1] == '/') {
+			short_code = short_code.slice(0, -1);
+		}
 
 		let record = await this.findByShortcode(short_code);
 
@@ -217,7 +247,15 @@ Shortlink.setMethod(async function createShortUrl(options) {
 	}
 
 	let doc = this.createDocument();
-	doc.long_url = long_url;
+
+	if (long_url) {
+		doc.long_url = long_url;
+	}
+
+	if (file) {
+		doc.file = file;
+	}
+
 	doc.short_code = short_code;
 
 	let short_url = RURL.parse('/' + short_code, alchemy.plugins.shortlink.base_url);
