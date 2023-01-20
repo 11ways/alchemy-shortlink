@@ -3,6 +3,7 @@
 * Add QR-code view of shortlinks
 * Add a link creator page & a view page
 * Also host files
+* Add basic paste handler
 
 ## 0.1.1 (2023-01-19)
 

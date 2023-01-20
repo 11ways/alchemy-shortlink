@@ -1,3 +1,5 @@
+const PASTE_LISTENER = Symbol('pasteListener');
+
 /**
  * The link-creator custom element
  *
@@ -40,6 +42,55 @@ LinkCreator.setMethod(async function introduced() {
 		e.preventDefault();
 		this.submitForm();
 	});
+
+	if (document[PASTE_LISTENER]) {
+		document.removeEventListener(document[PASTE_LISTENER]);
+	}
+
+	document[PASTE_LISTENER] = async e => {
+
+		let text = e.clipboardData.getData('text') || e.clipboardData.getData('text/plain');
+
+		console.log('Got text:', text);
+
+		// Ignore pasted text
+		if (text) {
+			return;
+		}
+
+		e.preventDefault();
+  		const items = typeof navigator?.clipboard?.read === 'function' ? await navigator.clipboard.read() : e.clipboardData.files;
+
+		for (const item of items) {
+			let type;
+
+			if (item.type) {
+				type = item.type;
+			} else if (item.types) {
+				type = item.types[0];
+			} else {
+				continue;
+			}
+
+			if (type == 'text/plain') {
+				continue;
+			}
+
+			let data = await item.getType(type);
+
+			let filename = Date.now() + '_' + type.slug().underscore();
+
+			let uploader = this.querySelector('al-file');
+			uploader.uploadFile({
+				file     : data,
+				filename : filename,
+			})
+
+			break;
+		}
+	};
+
+	document.addEventListener('paste', document[PASTE_LISTENER]);
 });
 
 /**
