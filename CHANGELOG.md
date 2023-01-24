@@ -1,4 +1,4 @@
-## 0.2.0 (WIP)
+## 0.2.0 (2023-01-24)
 
 * Add QR-code view of shortlinks
 * Add a link creator page & a view page
