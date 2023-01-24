@@ -4,6 +4,7 @@
 * Add a link creator page & a view page
 * Also host files
 * Add basic paste handler
+* Sort shortlink models by _id descending
 
 ## 0.1.1 (2023-01-19)
 

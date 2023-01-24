@@ -7,9 +7,21 @@
  * @since    0.1.0
  * @version  0.1.0
  */
-const ShortlinkHit = Function.inherits('Alchemy.Model', function ShortlinkHit(options) {
-	ShortlinkHit.super.call(this, options);
+const ShortlinkHit = Function.inherits('Alchemy.Model', 'ShortlinkHit');
+
+/**
+ * The default sort options
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @type     {Object}
+ */
+ShortlinkHit.prepareProperty('sort', function sort() {
+	return {_id: -1};
 });
+
 
 /**
  * Constitute the class wide schema

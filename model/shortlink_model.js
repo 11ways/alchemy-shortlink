@@ -12,6 +12,19 @@ let generator;
 const Shortlink = Function.inherits('Alchemy.Model', 'Shortlink');
 
 /**
+ * The default sort options
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.0
+ * @version  0.2.0
+ *
+ * @type     {Object}
+ */
+Shortlink.prepareProperty('sort', function sort() {
+	return {_id: -1};
+});
+
+/**
  * Constitute the class wide schema
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
