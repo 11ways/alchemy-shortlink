@@ -26,9 +26,21 @@ Router.add({
 });
 
 Router.add({
+	name       : 'Shortlink#redirectQr',
+	methods    : 'get',
+	paths      : '/qr/{short_code}'
+});
+
+Router.add({
 	name       : 'Shortlink#redirect',
 	methods    : 'get',
 	paths      : '/{short_code}'
+});
+
+Router.add({
+	name       : 'Shortlink#catchAllQr',
+	methods    : 'get',
+	paths      : /\/qr\/(.*)/,
 });
 
 Router.add({

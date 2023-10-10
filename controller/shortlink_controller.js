@@ -59,6 +59,24 @@ Shortlink.setAction(async function create(conduit) {
 });
 
 /**
+ * Redirect a QR code scan
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {Conduit}   conduit
+ * @param    {String}    short_code
+ */
+Shortlink.setAction(async function redirectQr(conduit, short_code) {
+
+	let shortlink = this.getModel('Shortlink');
+	let document = await shortlink.findByShortcode(short_code);
+
+	this.handleShortlink(conduit, document, true);
+});
+
+/**
  * Redirect the user
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
@@ -74,7 +92,7 @@ Shortlink.setAction(async function redirect(conduit, short_code) {
 
 	let document = await shortlink.findByShortcode(short_code);
 
-	this.handleShortlink(conduit, document);
+	this.handleShortlink(conduit, document, false);
 });
 
 /**
@@ -93,7 +111,26 @@ Shortlink.setAction(async function catchAll(conduit, path) {
 
 	let document = await shortlink.findByShortcode(path);
 
-	this.handleShortlink(conduit, document);
+	this.handleShortlink(conduit, document, false);
+});
+
+/**
+ * Catchall for QR links
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {Conduit}   conduit
+ * @param    {String}    path
+ */
+Shortlink.setAction(async function catchAllQr(conduit, path) {
+
+	let shortlink = this.getModel('Shortlink');
+
+	let document = await shortlink.findByShortcode(path);
+
+	this.handleShortlink(conduit, document, true);
 });
 
 /**
@@ -101,12 +138,13 @@ Shortlink.setAction(async function catchAll(conduit, path) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.0
- * @version  0.2.0
+ * @version  0.2.1
  *
  * @param    {Conduit}   conduit
  * @param    {Shortlink} shortlink
+ * @param    {Boolean}   from_qr
  */
-Shortlink.setMethod(async function handleShortlink(conduit, shortlink) {
+Shortlink.setMethod(async function handleShortlink(conduit, shortlink, from_qr) {
 
 	if (!shortlink) {
 		return conduit.notFound();
@@ -127,7 +165,7 @@ Shortlink.setMethod(async function handleShortlink(conduit, shortlink) {
 		return this.render('shortlink/qr');
 	}
 
-	shortlink.registerHit(conduit);
+	shortlink.registerHit(conduit, from_qr);
 
 	if (file_id) {
 		const MediaFile = this.getModel('MediaFile');

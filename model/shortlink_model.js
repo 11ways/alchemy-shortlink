@@ -293,13 +293,14 @@ Shortlink.setMethod(async function createShortUrl(options) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.2.1
  *
  * @param    {Conduit}   conduit
+ * @param    {Boolean}   from_qr
  *
  * @return   {Document.ShortlinkHit}
  */
-Shortlink.setDocumentMethod(function registerHit(conduit) {
+Shortlink.setDocumentMethod(function registerHit(conduit, from_qr) {
 
 	let ShortlinkHit = this.getModel('ShortlinkHit'),
 	    doc = ShortlinkHit.createDocument();
@@ -308,6 +309,7 @@ Shortlink.setDocumentMethod(function registerHit(conduit) {
 	doc.ip = conduit.ip;
 	doc.user_agent = conduit.headers['user-agent'];
 	doc.referrer = conduit.headers.referer || conduit.headers.referrer;
+	doc.from_qr = from_qr || false;
 
 	doc.save();
 

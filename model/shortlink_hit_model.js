@@ -22,13 +22,12 @@ ShortlinkHit.prepareProperty('sort', function sort() {
 	return {_id: -1};
 });
 
-
 /**
  * Constitute the class wide schema
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.0
+ * @version  0.2.1
  */
 ShortlinkHit.constitute(function addFields() {
 
@@ -43,4 +42,7 @@ ShortlinkHit.constitute(function addFields() {
 
 	// The referer
 	this.addField('referrer', 'String');
+
+	// Was this via QR code?
+	this.addField('from_qr', 'Boolean');
 });

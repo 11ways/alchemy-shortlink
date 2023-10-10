@@ -37,3 +37,5 @@ let options = {
 
 // Inject the user-overridden options
 alchemy.plugins.shortlink = Object.merge(options, config);
+
+alchemy.exposeStatic('shortlink_base', options.base_url);

@@ -2,7 +2,7 @@
 
 {% block expose('alchemy_layout').root.block %}
 	<al-qr-code
-		qr-content={% shortlink.short_url %}
+		qr-content={% shortlink.qr_short_url %}
 		qr-logo={% qr.logo %}
 		qr-background={% qr.background %}
 		qr-dots-color={% qr.dots_color %}
