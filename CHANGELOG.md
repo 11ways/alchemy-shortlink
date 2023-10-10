@@ -1,3 +1,7 @@
+## 0.2.1 (WIP)
+
+* Move routes to separate `routes.js` file, so they load in the correct order
+
 ## 0.2.0 (2023-01-24)
 
 * Add QR-code view of shortlinks

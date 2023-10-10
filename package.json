@@ -2,7 +2,7 @@
 	"name"            : "alchemy-shortlink",
 	"description"     : "A shortlink plugin for AlchemyMVC projects",
 	"author"          : "Jelle De Loecker <jelle@elevenways.be>",
-	"version"         : "0.2.0",
+	"version"         : "0.2.1-alpha",
 	"repository"      : "11ways/alchemy-shortlink",
 	"license"         : "MIT",
 	"keywords"        : ["skeleton", "boilerplate", "alchemymvc"],
