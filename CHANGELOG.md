@@ -1,4 +1,4 @@
-## 0.2.1 (WIP)
+## 0.2.1 (2023-10-15)
 
 * Move routes to separate `routes.js` file, so they load in the correct order
 * QR-codes will now link to `/qr/{shortcode}`, so we can track QR-code usages
