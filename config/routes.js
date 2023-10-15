@@ -11,6 +11,14 @@ Router.add({
 });
 
 Router.add({
+	name       : 'Shortlink#myShortlinks',
+	methods    : ['get'],
+	paths      : '/api/shortlink/my-shortlinks',
+	permission : 'shortlink',
+	weight     : 999,
+});
+
+Router.add({
 	name       : 'Shortlink#dashboard',
 	methods    : ['get', 'post'],
 	paths      : '/dashboard',

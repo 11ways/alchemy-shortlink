@@ -1,7 +1,32 @@
+<%
+fieldset = [
+	{name : 'created', type: 'date'},
+	{name : 'short_code'},
+	{name : 'long_url'},
+	{name : 'file', type: 'file', view: 'file_preview'},
+	{name : 'total_hits'},
+	{name : 'last_hit', type: 'date'},
+];
+%>
 {% extend expose('alchemy_layout').root.view %}
 
 {% block expose('alchemy_layout').root.block %}
 
 <al-link-creator></al-link-creator>
+
+<div class="card my-shortlink-card">
+	<div class="card-body">
+		<h2>My Shortlinks</h2>
+
+		<al-table
+			class="my-shortlink-table"
+			has-actions="true"
+			purpose="view"
+			#page_size="25"
+			#fieldset={% fieldset %}
+			#recordsource={% {route: 'Shortlink#myShortlinks'} %}
+		></al-table>
+	</div>
+</div>
 
 {% /block %}

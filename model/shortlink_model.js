@@ -66,6 +66,27 @@ Shortlink.constitute(function addFields() {
 		description : 'The user that made this shortlink',
 	});
 
+	// When was the last date the daily statistics were generated for?
+	this.addField('last_statistics_generated', 'Date', {
+		description : 'The last date the daily statistics were generated for',
+	});
+
+	this.addField('total_hits', 'Integer', {
+		description : 'Total amount of clicks',
+	});
+
+	this.addField('qr_hits', 'Integer', {
+		description : 'Total amount of QR-code clicks',
+	});
+
+	this.addField('regular_hits', 'Integer', {
+		description : 'Total amount of non-QR clicks',
+	});
+
+	this.addField('last_hit', 'Datetime', {
+		description : 'When the last click happened',
+	});
+
 	// The IP address that created this
 	this.addField('ip', 'String');
 });
@@ -104,6 +125,7 @@ Shortlink.constitute(function chimeraConfig() {
 	edit.addField('file');
 	edit.addField('user_id');
 	edit.addField('ip');
+	edit.addField('last_statistics_generated');
 });
 
 /**
@@ -125,6 +147,18 @@ Shortlink.setMethod(function beforeSave(document, options, next) {
 		document.short_code_hash = document.short_code.numberHash();
 	} else {
 		document.short_code_hash = null;
+	}
+
+	if (!document.total_hits) {
+		document.total_hits = 0;
+	}
+
+	if (!document.regular_hits) {
+		document.regular_hits = 0;
+	}
+
+	if (!document.qr_hits) {
+		document.qr_hits = 0;
 	}
 
 	next();
@@ -289,6 +323,67 @@ Shortlink.setMethod(async function createShortUrl(options) {
 });
 
 /**
+ * Get all the shortlinks that received a hit
+ * since the given date
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {Date}   since
+ *
+ * @return   {Document.Shortlink[]}
+ */
+Shortlink.setMethod(async function getShortlinksHitSince(since) {
+
+	if (!since) {
+		since = Date.create().subtract(1, 'day');
+	}
+
+	if (typeof since != 'object') {
+		since = Date.create(since);
+	}
+
+	const ShortlinkHit = this.getModel('ShortlinkHit');
+
+	// Create a pipeline that gets all the shortlink ids
+	// that have received a hit since the given date
+	let pipeline = [
+		{
+			$match: {
+				created: {
+					$gte: since
+				}
+			}
+		},
+		{
+			$project: {
+				shortlink_id: 1,
+			}
+		},
+		{
+			$group: {
+				_id: '$shortlink_id'
+			}
+		}
+	];
+
+	let shortlink_id_records = await ShortlinkHit.executeMongoPipeline(pipeline);
+	let ids = [];
+
+	for (let entry of shortlink_id_records) {
+		ids.push(entry._id);
+	}
+
+	let crit = this.find();
+	crit.where('_id').in(ids);
+
+	let records = await this.find('all', crit);
+
+	return records;
+});
+
+/**
  * Register a hit
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
@@ -314,4 +409,423 @@ Shortlink.setDocumentMethod(function registerHit(conduit, from_qr) {
 	doc.save();
 
 	return doc;
+});
+
+/**
+ * Create the config for Apex-charts
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ */
+Shortlink.setDocumentMethod(async function getApexChartsConfig() {
+
+	const now = Date.create();
+
+	let records = await this.getDailyStatisticRecords();
+	let min_date;
+	let cumul_data = [];
+	let daily_data = [];
+
+	let running_clicks = 0;
+	let min_clicks = null;
+	let max_clicks = null;
+
+	let x_max = now.getTime(),
+	    x_min = now.clone().subtract(6, 'months').getTime();
+
+	for (let record of records) {
+
+		let date = new Date(record.year + '-' + record.month + '-' + record.day);
+
+		if (!min_date || date < min_date) {
+			min_date = date;
+		}
+
+		if (min_clicks == null || min_clicks > record.total_hits) {
+			min_clicks = record.total_hits;
+		}
+
+		if (max_clicks == null || max_clicks < record.total_hits) {
+			max_clicks = record.total_hits;
+		}
+
+		running_clicks += record.total_hits;
+
+		cumul_data.push([+date, running_clicks]);
+		daily_data.push([+date, record.total_hits]);
+	}
+
+	if (min_date > x_min) {
+		x_min = min_date.getTime();
+	}
+
+	let apex_config = {
+		series: [
+			{
+				name : 'cumul',
+				type : 'line',
+				data : cumul_data,
+			},
+			{
+				name : 'daily',
+				type : 'column',
+				data : daily_data,
+			},
+		],
+		chart : {
+			type : 'line',
+			height: 350,
+			stacked: false,
+			width: '100%',
+			height: '100%',
+		},
+		dataLabels: {
+			enabled: false
+		},
+		stroke: {
+			width: [1, 1, 4]
+		},
+		// markers: {
+		// 	size: 0,
+		// 	style: 'hollow',
+		// },
+		xaxis: {
+			type: 'datetime',
+			min : x_min,
+			max : x_max,
+			tickAmount: 6,
+			labels: {
+				format: 'yyyy-MM-dd'
+			},
+		},
+		yaxis: [
+			{
+				min        : 0,
+				max        : Math.ceil(running_clicks * 1.1),
+				seriesName : 'cumul',
+				opposite   : false,
+				axisTicks: {
+					show: true,
+				},
+				axisBorder: {
+					show: true,
+					color: '#008FFB'
+				},
+				labels: {
+					style: {
+						colors: '#008FFB',
+					}
+				},
+				title: {
+					text: 'Cumulative hits',
+					style: {
+						color: '#008FFB',
+					}
+				},
+			},
+			{
+				min        : 0,
+				max        : Math.ceil(max_clicks * 1.1),
+				seriesName : 'daily',
+				opposite   : true,
+				axisTicks: {
+					show: true,
+				},
+				axisBorder: {
+					show: true,
+					color: '#00E396'
+				},
+				labels: {
+					style: {
+						colors: '#00E396',
+					}
+				},
+				title: {
+					text: 'Daily hits',
+					style: {
+						color: '#00E396',
+					}
+				},
+			}
+		],
+		tooltip: {
+			x: {
+				format: 'dd MMM yyyy'
+			}
+		},
+		
+	};
+
+	return apex_config;
+});
+
+/**
+ * Get all the daily statistics records
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ */
+Shortlink.setDocumentMethod(async function getDailyStatisticRecords() {
+
+	// Generate the statistics.
+	// This will hopefully only have to generate them for 1 (the current) day
+	await this.generateStatistics();
+
+	const SDS = Model.get('ShortlinkDailyStatistics');
+
+	let crit = SDS.find();
+	crit.where('shortlink_id').equals(this._id);
+	crit.sort({'year': 'asc', 'month': 'asc', 'day': 'asc'});
+
+	let all = await SDS.find('all', crit);
+
+	return all;
+});
+
+/**
+ * Generate statistics
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {Date}   until_date
+ */
+Shortlink.setDocumentMethod(async function generateStatistics(until_date) {
+
+	const SDS = Model.get('ShortlinkDailyStatistics'),
+	      Hits = Model.get('ShortlinkHit'),
+	      now = new Date();
+
+	let last_statistics_generated = this.last_statistics_generated;
+
+	if (!last_statistics_generated) {
+		last_statistics_generated = this.created.clone();
+	}
+
+	last_statistics_generated = last_statistics_generated.clone().startOf('day');
+
+	let last_date;
+
+	if (!until_date) {
+		until_date = Date.create();
+	}
+
+	// Get all the days there were hits since the last time statistics were generated
+	let date_pipeline = [
+		{
+			$match: {
+				shortlink_id: this._id,
+				created: {
+					$gte: last_statistics_generated,
+					$lte: until_date,
+				}
+			}
+		},
+		{
+			$project: {
+				year: {
+					$year: '$created'
+				},
+				month: {
+					$month: '$created'
+				},
+				day: {
+					$dayOfMonth: '$created'
+				}
+			}
+		},
+		{
+			$group: {
+				_id: {
+					year: '$year',
+					month: '$month',
+					day: '$day'
+				}
+			}
+		},
+		{
+			$sort: {
+				'_id.year': 1,
+				'_id.month': 1,
+				'_id.day': 1,
+			}
+		}
+	];
+
+	let dates_result = await Hits.executeMongoPipeline(date_pipeline);
+
+	let tasks = [];
+
+	for (let entry of dates_result) {
+		let info = entry._id;
+
+		let current_date = new Date(info.year, info.month - 1, info.day);
+
+		if (current_date > last_date) {
+			last_date = new Date(info.year, info.month - 1, info.day);
+		}
+
+		tasks.push(async (next) => {
+
+			let record = await SDS.findByValues({
+				shortlink_id : this._id,
+				year         : current_date.getFullYear(),
+				month        : current_date.getMonth() + 1,
+				day          : current_date.getDate(),
+			});
+
+			if (!record) {
+				record = SDS.createDocument();
+				record.shortlink_id = this._id;
+				record.year = current_date.getFullYear();
+				record.month = current_date.getMonth() + 1;
+				record.day = current_date.getDate();
+			}
+
+			let pipeline = [
+				{
+					$match: {
+						shortlink_id: this._id,
+						created: {
+							$gte: current_date,
+							$lte: current_date.clone().endOf('day'),
+						}
+					}
+				},
+				{
+					$set: {
+						total_hits: 1,
+					}
+				},
+				{
+					$project: {
+						shortlink_id: 1,
+						total_hits: 1,
+
+						// Only count the ones that came from a QR code
+						qr_hits: {
+							$cond: {
+								if: {
+									$eq: ['$from_qr', true]
+								},
+								then: 1,
+								else: 0
+							}
+						},
+						regular_hits: {
+							$cond: {
+								if: {
+									$eq: ['$from_qr', true]
+								},
+								then: 0,
+								else: 1
+							}
+						},
+					}
+				},
+				{
+					$group: {
+						_id: "$shortlink_id",
+						total_hits: {
+							$sum: '$total_hits'
+						},
+						qr_hits: {
+							$sum: '$qr_hits'
+						},
+						regular_hits: {
+							$sum: '$regular_hits'
+						}
+					},
+				}
+			];
+
+			let result = await Hits.executeMongoPipeline(pipeline);
+			let do_save = true;
+
+			if (result?.length) {
+				result = result[0];
+
+				record.total_hits = result.total_hits;
+				record.qr_hits = result.qr_hits;
+				record.regular_hits = result.regular_hits;
+			} else {
+
+				if (record.total_hits || record.qr_hits || record.regular_hits) {
+					record.total_hits = 0;
+					record.qr_hits = 0;
+					record.regular_hits = 0;
+				} else {
+					do_save = false;
+				}
+			}
+
+			if (do_save) {
+				await record.save();
+			}
+
+			next();
+		});
+	}
+
+	await Function.parallel(4, tasks);
+
+	// Now get the totals, which will be stored in ths record itself
+	let pipeline = [
+		{
+			$match: {
+				shortlink_id: this._id,
+			}
+		},
+		{
+			$project: {
+				total_hits   : 1,
+				qr_hits      : 1,
+				regular_hits : 1,
+			}
+		},
+		{
+			$group: {
+				_id: "$shortlink_id",
+				total_hits: {
+					$sum: '$total_hits'
+				},
+				qr_hits: {
+					$sum: '$qr_hits'
+				},
+				regular_hits: {
+					$sum: '$regular_hits'
+				}
+			},
+		}
+	];
+
+	let result = await SDS.executeMongoPipeline(pipeline);
+
+	if (result?.length) {
+		result = result[0];
+
+		this.total_hits = result.total_hits;
+		this.qr_hits = result.qr_hits;
+		this.regular_hits = result.regular_hits;
+	}
+
+	let last_hit_crit = Hits.find();
+	last_hit_crit.where('shortlink_id').equals(this._id);
+	last_hit_crit.sort({_id: -1});
+	let last_hit = await Hits.find('first', last_hit_crit);
+
+	if (last_hit) {
+		this.last_hit = last_hit.created;
+	}
+
+	// Make sure this doesn't accidentally get set in the future
+	if (last_date > now) {
+		last_date = now;
+	}
+
+	this.last_statistics_generated = last_date;
+	await this.save();
 });

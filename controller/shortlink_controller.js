@@ -14,12 +14,36 @@ const Shortlink = Function.inherits('Alchemy.Controller', 'Shortlink');
  * Create a new shortlink
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {String}   title
+ */
+Shortlink.setMethod(function setPageTitle(title) {
+
+	if (!title) {
+		title = '';
+	} else {
+		title += ' | ';
+	}
+
+	title += alchemy.settings.title;
+
+	this.setTitle(title);
+});
+
+/**
+ * Create a new shortlink
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.1.1
+ * @version  0.2.1
  *
  * @param    {Conduit}   conduit
  */
 Shortlink.setAction(async function create(conduit) {
+
+	this.setPageTitle('Create');
 
 	if (alchemy.plugins.shortlink.api_key) {
 		let api_key = conduit.headers.api_key;
@@ -93,6 +117,59 @@ Shortlink.setAction(async function redirect(conduit, short_code) {
 	let document = await shortlink.findByShortcode(short_code);
 
 	this.handleShortlink(conduit, document, false);
+});
+
+/**
+ * My shortlinks
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.1
+ * @version  0.2.1
+ *
+ * @param    {Conduit}   conduit
+ */
+Shortlink.setAction(async function myShortlinks(conduit) {
+
+	let result = [];
+	let user_id = conduit.getUserId();
+
+	let page_size = conduit.param('page_size') || 25;
+	let page = conduit.param('page') || 1;
+	let sort = conduit.param('sort');
+
+	if (user_id) {
+		const Shortlink = this.getModel('Shortlink');
+		let crit = Shortlink.find();
+		crit.where('user_id').equals(user_id);
+		crit.page(page, page_size);
+
+		let sort_config = {};
+
+		if (sort?.field) {
+			sort_config[sort.field] = sort.dir;
+		} else {
+			sort_config.created = -1;
+		}
+
+		crit.sort(sort_config);
+
+		result = await Shortlink.find(crit);
+
+		for (let record of result) {
+			let view_action = new Classes.Alchemy.Form.Action.Url({
+				name : 'view',
+				icon : 'eye',
+				placement : ['row', 'context'],
+				url       : alchemy.routeUrl('Shortlink#view', {
+					shortlink : record.$pk,
+				})
+			});
+
+			record.$hold.actions = [view_action];
+		}
+	}
+
+	conduit.end(result);
 });
 
 /**
@@ -193,6 +270,8 @@ Shortlink.setMethod(async function handleShortlink(conduit, shortlink, from_qr) 
  */
 Shortlink.setAction(async function dashboard(conduit) {
 
+	this.setPageTitle('Dashboard');
+
 	if (conduit.method == 'post') {
 		let data = conduit.body?.Shortlink;
 
@@ -218,10 +297,16 @@ Shortlink.setAction(async function dashboard(conduit) {
  */
 Shortlink.setAction(async function view(conduit, shortlink) {
 
+	this.setPageTitle('View');
+
 	if (shortlink.file) {
 		const file = await this.getModel('MediaFile').findByPk(shortlink.file);
 		this.set('shortlink_file', file);
 	}
+
+	let daily_apex_config = await shortlink.getApexChartsConfig();
+
+	this.set('daily_apex_config', daily_apex_config);
 
 	this.set('qr', alchemy.plugins.shortlink?.qr);
 	this.set('shortlink', shortlink);
@@ -233,11 +318,19 @@ Shortlink.setAction(async function view(conduit, shortlink) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.0
- * @version  0.2.0
+ * @version  0.2.1
  *
  * @param    {Conduit}   conduit
  */
 Shortlink.setMethod(async function createShortlink(conduit, body) {
+
+	if (!body?.user_id) {
+		body.user_id = conduit.getUserId();
+	}
+
+	if (!body?.ip) {
+		body.ip = conduit.ip;
+	}
 
 	const Shortlink = this.getModel('Shortlink');
 

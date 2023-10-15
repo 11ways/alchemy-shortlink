@@ -2,6 +2,7 @@
 
 * Move routes to separate `routes.js` file, so they load in the correct order
 * QR-codes will now link to `/qr/{shortcode}`, so we can track QR-code usages
+* Add statistics to view page + overview on dashboard
 
 ## 0.2.0 (2023-01-24)
 

@@ -30,4 +30,12 @@
 			{{ shortlink.short_url }}
 		</a>
 	</div>
+
+	{% if daily_apex_config %}
+		<div class="card charts-card">
+			<div class="card-body">
+				<al-apex-chart #apex_config={% daily_apex_config %}></al-apex-chart>
+			</div>
+		</div>
+	{% /if %}
 {% /block %}

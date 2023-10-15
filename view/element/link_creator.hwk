@@ -30,7 +30,7 @@
 
 	<al-button class="button" behaviour="submit">
 		<al-state state-name="default">
-			{%t "submit" %}
+			{%t "create" %}
 		</al-state>
 		<al-state state-name="error">
 			{%t "error" %}
