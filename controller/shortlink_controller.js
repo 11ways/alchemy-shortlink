@@ -33,40 +33,48 @@ Shortlink.setMethod(function setPageTitle(title) {
 });
 
 /**
- * Create a new shortlink
+ * Create a new shortlink via the API
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.2.1
+ * @version  0.2.2
  *
  * @param    {Conduit}   conduit
  */
 Shortlink.setAction(async function create(conduit) {
 
-	this.setPageTitle('Create');
+	let api_key = conduit.headers.api_key;
 
-	if (alchemy.plugins.shortlink.api_key) {
-		let api_key = conduit.headers.api_key;
+	if (!api_key || typeof api_key != 'string' || !api_key.trim()) {
+		return conduit.end({
+			message : 'No API key was found!'
+		});
+	}
 
-		if (alchemy.plugins.shortlink.api_key != api_key) {
-			return conduit.end({
-				message : 'API key does not match!'
-			});
-		}
+	api_key = api_key.trim();
+
+	let KeyModel = this.getModel('ShortlinkApiKey');
+	let key = await KeyModel.findByValues({
+		api_key : api_key
+	});
+
+	if (!key) {
+		return conduit.end({
+			message : 'API key does not match!'
+		});
 	}
 
 	let shortlink = this.getModel('Shortlink');
 
 	let long_url = conduit.param('long_url') || conduit.param('longurl'),
 	    short_code = conduit.param('shortcode') || conduit.param('short_code'),
-	    document,
-	    user_id = conduit.headers.user_id;
+	    document;
 
 	try {
 		document = await shortlink.createShortUrl({
 			long_url   : long_url,
 			short_code : short_code,
-			user_id    : user_id
+			user_id    : key.user_id
 		});
 	} catch (err) {
 		console.log('ERR:', err)

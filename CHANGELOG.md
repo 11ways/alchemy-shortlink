@@ -1,3 +1,7 @@
+## 0.2.2 (WIP)
+
+* Add `ShortlinkApiKey` model, so each user can have their own API keys
+
 ## 0.2.1 (2023-10-15)
 
 * Move routes to separate `routes.js` file, so they load in the correct order

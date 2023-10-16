@@ -9,10 +9,6 @@ let options = {
 	// The base url of the shortlinker
 	base_url : null,
 
-	// The API key to allow remote shortlinks to be made
-	// @TODO: allow multiple keys
-	api_key  : null,
-
 	// QR code settings
 	qr : {
 
