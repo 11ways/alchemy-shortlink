@@ -1,4 +1,4 @@
-## 0.2.3 (WIP)
+## 0.2.3 (2023-10-18)
 
 * Add custom download options to the `al-qr-code` element
 
