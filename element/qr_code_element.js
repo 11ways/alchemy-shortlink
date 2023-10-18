@@ -17,6 +17,15 @@ const QrCode = Function.inherits('Alchemy.Element.App', 'AlQrCode');
 QrCode.setStylesheetFile('shortlink/al_qr_code');
 
 /**
+ * The filename for downloads
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.3
+ */
+QrCode.setAttribute('qr-filename');
+
+/**
  * The actual data to add to the QR code
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
@@ -75,17 +84,18 @@ QrCode.setAttribute('qr-error-correction');
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.0
- * @version  0.2.0
+ * @version  0.2.3
  */
 QrCode.setMethod(async function introduced() {
 
 	await hawkejs.require('qr-code-styling');
 
-	const qrCode = new QRCodeStyling({
+	let qr_options = {
 		width: 1500,
 		height: 1500,
 		data: this.qr_content,
 		image: this.qr_logo,
+		type: 'canvas',
 		qrOptions : {
 			errorCorrectionLevel: this.qr_error_correction,
 		},
@@ -100,7 +110,115 @@ QrCode.setMethod(async function introduced() {
 			crossOrigin: "anonymous",
 			margin: 15
 		}
-	});
+	};
+
+	this.qr_options = qr_options;
+
+	const qrCode = new QRCodeStyling(qr_options);
 
 	qrCode.append(this);
+
+	this.qr_code_instance = qrCode;
+
+	this.addEventListener('contextmenu', e => {
+		this.showContextMenu(e);
+	});
+});
+
+/**
+ * Force a download of the current QR code
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.3
+ */
+QrCode.setMethod(async function downloadAsFile(type, width, height, dot_color) {
+
+	await hawkejs.require('qr-code-styling');
+
+	let instance;
+
+	let options = JSON.clone(this.qr_options);
+	options.width = width || 9000;
+	options.height = height || 9000;
+
+	if (dot_color) {
+		if (!options.dotsOptions) {
+			options.dotsOptions = {};
+		}
+
+		options.dotsOptions.color = dot_color;
+	}
+
+	instance = new QRCodeStyling(options);
+
+	if (!type) {
+		type = 'png';
+	}
+
+	let filename;
+
+	if (this.qr_filename) {
+		filename = this.qr_filename;
+	}
+
+	if (filename) {
+		if (width && height) {
+			filename += '_' + width + 'x' + height;
+		}
+
+		if (dot_color) {
+			filename += '_' + String(dot_color).slug();
+		}
+	}
+
+	let download_options = {
+		extension : type,
+		name      : filename,
+	};
+
+	instance.download(download_options);
+});
+
+/**
+ * Show the context menu
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.3
+ */
+QrCode.setMethod(function showContextMenu(e) {
+
+	let menu = this.createElement('he-context-menu');
+
+	if (!this.qr_logo) {
+		// Logos are somehow always drawn horribly
+		// (They are included in the file with a set width & height, and then scaled,
+		// which causes blurriness)
+		menu.addEntry({
+			title : 'Download SVG',
+		}, () => this.downloadAsFile('svg'));
+	}
+
+	menu.addEntry({
+		title : 'Download PNG',
+	}, () => this.downloadAsFile('png'));
+
+	menu.addEntry({
+		title : 'Download JPEG',
+	}, () => this.downloadAsFile('jpeg'));
+
+	menu.addEntry({
+		title : 'Download PNG (High-res)',
+	}, () => this.downloadAsFile('png', 3000, 3000));
+
+	menu.addEntry({
+		title : 'Download PNG (Super-high-res)',
+	}, () => this.downloadAsFile('png', 10000, 10000));
+
+	menu.addEntry({
+		title : 'Download PNG (Super-high-res, monochrome)',
+	}, () => this.downloadAsFile('png', 10000, 10000, '#000'));
+
+	menu.show(e);
 });

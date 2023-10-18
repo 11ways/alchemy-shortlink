@@ -37,7 +37,7 @@ Shortlink.setMethod(function setPageTitle(title) {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.1.0
- * @version  0.2.2
+ * @version  0.2.3
  *
  * @param    {Conduit}   conduit
  */
@@ -74,7 +74,8 @@ Shortlink.setAction(async function create(conduit) {
 		document = await shortlink.createShortUrl({
 			long_url   : long_url,
 			short_code : short_code,
-			user_id    : key.user_id
+			user_id    : key.user_id,
+			ip         : conduit.ip,
 		});
 	} catch (err) {
 		console.log('ERR:', err)

@@ -20,6 +20,7 @@
 		qr-dots-color={% qr.dots_color %}
 		qr-dots-type={% qr.dots_type %}
 		qr-error-correction={% qr.error_correction %}
+		qr-filename={% shortlink.qr_filename %}
 	></al-qr-code>
 
 	<div class="qr-code-info">

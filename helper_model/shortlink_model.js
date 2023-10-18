@@ -31,3 +31,25 @@ Shortlink.setDocumentProperty(function qr_short_url() {
 
 	return result;
 });
+
+/**
+ * Get the filename for a QR code image
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.3
+ *
+ * @return   {String}
+ */
+Shortlink.setDocumentProperty(function qr_filename() {
+
+	let code = this.short_code;
+
+	if (!code) {
+		code = this._id;
+	}
+
+	code = String(code).slug();
+
+	return 'qr_' + code;
+});

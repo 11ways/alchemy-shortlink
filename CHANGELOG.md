@@ -1,3 +1,7 @@
+## 0.2.3 (WIP)
+
+* Add custom download options to the `al-qr-code` element
+
 ## 0.2.2 (2023-10-16)
 
 * Add `ShortlinkApiKey` model, so each user can have their own API keys
