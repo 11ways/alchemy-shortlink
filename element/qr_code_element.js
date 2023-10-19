@@ -84,7 +84,7 @@ QrCode.setAttribute('qr-error-correction');
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.0
- * @version  0.2.3
+ * @version  0.2.4
  */
 QrCode.setMethod(async function introduced() {
 
@@ -114,15 +114,31 @@ QrCode.setMethod(async function introduced() {
 
 	this.qr_options = qr_options;
 
-	const qrCode = new QRCodeStyling(qr_options);
-
-	qrCode.append(this);
-
-	this.qr_code_instance = qrCode;
+	this.recreateQrCode();
 
 	this.addEventListener('contextmenu', e => {
 		this.showContextMenu(e);
 	});
+
+	this.background_is_on = true;
+	this.previous_background = null;
+});
+
+/**
+ * Recreate the QR code
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.3
+ */
+QrCode.setMethod(function recreateQrCode(e) {
+
+	Hawkejs.removeChildren(this);
+
+	const qrCode = new QRCodeStyling(this.qr_options);
+	qrCode.append(this);
+
+	this.qr_code_instance = qrCode;
 });
 
 /**
@@ -130,7 +146,7 @@ QrCode.setMethod(async function introduced() {
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.3
- * @version  0.2.3
+ * @version  0.2.4
  */
 QrCode.setMethod(async function downloadAsFile(type, width, height, dot_color) {
 
@@ -181,15 +197,60 @@ QrCode.setMethod(async function downloadAsFile(type, width, height, dot_color) {
 });
 
 /**
+ * Get the current toggle-background title
+ *
+ * @author   Jelle De Loecker   <jelle@elevenways.be>
+ * @since    0.2.3
+ * @version  0.2.4
+ */
+QrCode.setMethod(function getToggleBackgroundTitle() {
+
+	let result = 'Toggle background';
+	let color = this.qr_options?.backgroundOptions?.color;
+
+	if (color) {
+		result += ' (is now ' + color + ')';
+	}
+
+	return result;
+});
+
+/**
  * Show the context menu
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.3
- * @version  0.2.3
+ * @version  0.2.4
  */
 QrCode.setMethod(function showContextMenu(e) {
 
 	let menu = this.createElement('he-context-menu');
+
+	menu.addEntry(this.getToggleBackgroundTitle(), () => {
+
+		if (!this.qr_options) {
+			this.qr_options = {};
+		}
+
+		if (!this.qr_options.backgroundOptions) {
+			this.qr_options.backgroundOptions = {};
+		}
+
+		if (this.background_is_on) {
+			// Remember the current background color
+			this.previous_background = this.qr_options?.backgroundOptions?.color;
+
+			// Set it to transparent
+			this.qr_options.backgroundOptions.color = 'transparent';
+
+			this.background_is_on = false;
+		} else {
+			this.qr_options.backgroundOptions.color = this.previous_background;
+			this.background_is_on = true;
+		}
+
+		this.recreateQrCode();
+	});
 
 	if (!this.qr_logo) {
 		// Logos are somehow always drawn horribly

@@ -1,3 +1,7 @@
+## 0.2.4 (2023-10-19)
+
+* Add "Toggle background" button to the `ql-qr-code` context menu
+
 ## 0.2.3 (2023-10-18)
 
 * Add custom download options to the `al-qr-code` element
