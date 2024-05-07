@@ -1,3 +1,7 @@
+## 0.2.5 (2024-05-07)
+
+* Make sure the `qr_short_url` is always a valid URL
+
 ## 0.2.4 (2023-10-19)
 
 * Add "Toggle background" button to the `ql-qr-code` context menu

@@ -5,7 +5,7 @@ const Shortlink = Hawkejs.Model.getClass('Shortlink');
  *
  * @author   Jelle De Loecker   <jelle@elevenways.be>
  * @since    0.2.1
- * @version  0.2.1
+ * @version  0.2.5
  *
  * @return   {String}
  */
@@ -29,7 +29,9 @@ Shortlink.setDocumentProperty(function qr_short_url() {
 
 	result += 'qr/' + this.short_code;
 
-	return result;
+	let url = RURL.parse(result);
+
+	return url.href;
 });
 
 /**
